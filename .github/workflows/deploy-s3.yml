@@ -1,0 +1,44 @@
+name: Deploy - flask-s3-service (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (e.g. v1, v2)"
+        required: true
+        default: "v1"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_APPS }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region "${{ secrets.AWS_REGION }}" | \
+          docker login --username AWS --password-stdin "${{ secrets.ECR_S3_REPO }}"
+
+      - name: Build & Push
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          docker build -t flask-s3-service:$TAG ./flask-s3-service
+          docker tag flask-s3-service:$TAG "${{ secrets.ECR_S3_REPO }}:$TAG"
+          docker push "${{ secrets.ECR_S3_REPO }}:$TAG"
+
+      - name: Force new deployment
+        run: |
+          aws ecs update-service \
+            --cluster "${{ secrets.ECS_CLUSTER }}" \
+            --service "${{ secrets.ECS_SERVICE_S3 }}" \
+            --force-new-deployment
