@@ -1,0 +1,17 @@
+name: CI - flask-s3-service
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "flask-s3-service/**"
+      - ".github/workflows/ci-s3.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t flask-s3-service ./flask-s3-service
