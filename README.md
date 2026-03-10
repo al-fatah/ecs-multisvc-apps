@@ -167,7 +167,3 @@ curl -X POST http://<ALB_DNS>/sqs/send \
 - Phase 5: Portfolio documentation ✅
 
 ---
-
-### One-line summary
-
-Two containerized Flask microservices deployed on ECS Fargate with ALB routing, automated via GitHub Actions using OIDC and least-privilege IAM.
